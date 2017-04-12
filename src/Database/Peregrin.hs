@@ -16,7 +16,7 @@ import           Data.Maybe (listToMaybe, fromMaybe)
 import           Data.String (fromString)
 import           Database.PostgreSQL.Simple (Connection, Only(..), Query)
 import qualified Database.PostgreSQL.Simple as P
-import           Database.PostgreSQL.Simple.ToField (ToField(..))
+import           Database.PostgreSQL.Simple.ToRow (ToRow(..))
 import           Database.PostgreSQL.Simple.FromRow (FromRow(..), field)
 import           Database.PostgreSQL.Simple.Transaction (withTransactionLevel, IsolationLevel(..))
 
@@ -83,16 +83,16 @@ migrate' tables c schema migrations = do
   -- any rows represents "version 0" of the metadata data
   -- structures. These operations are idempotent and so we don't
   -- need any lock.
-  void $ transact $ execute sqlCreateSchema [ schema ]
-  void $ transact $ execute sqlCreateMetaTbl [ metaTable ]
+  void $ transact $ execute sqlCreateSchema (Only schema)
+  void $ transact $ execute sqlCreateMetaTbl (Only metaTable)
   -- Apply meta-migrations.
   withLock $
     -- Apply meta-migrations; these are hardcoded for obvious reasons.
     -- EXCEPT for the very first migration, NO changes may be made to
     -- the "migration_meta" table in any migration here. This is to
     -- ensure 'perpetual' compatibility.
-    metaMigrate 1 [ (sqlInsertMetaVersion0, [metaTable])
-                  , (sqlCreateMigrationTbl, [migrationTable])
+    metaMigrate 1 [ (sqlInsertMetaVersion0, (Only metaTable))
+                  , (sqlCreateMigrationTbl, (Only migrationTable))
                   ]
   -- Apply all the migrations; we do it one-by-one since our lock is
   -- itself automatically released by PostgreSQL at the end of each of
@@ -101,19 +101,19 @@ migrate' tables c schema migrations = do
     withLock $ do
       -- Check if change set has already been applied
       existingMigration :: (Maybe Migration) <-
-        listToMaybe <$> query sqlFindMigration
-                          [ toField migrationTable
-                          , toField mid ]
+        listToMaybe <$> query sqlFindMigration ( migrationTable
+                                               , mid
+                                               )
       case existingMigration of
         Just (Migration _ sql') | sql == sql' ->
           return ()
         Just _ ->
           throwIO $ MigrationModifiedError mid
         Nothing -> do
-          void $ execute sqlInsertMigration [ toField migrationTable
-                                            , toField mid
-                                            , toField sql
-                                            ]
+          void $ execute sqlInsertMigration ( migrationTable
+                                            , mid
+                                            , sql
+                                            )
           void $ execute_ $ fromString $ T.unpack sql
 
   where
@@ -123,30 +123,31 @@ migrate' tables c schema migrations = do
     metaTable = mcMetaMigrationTable tables
 
     -- Apply a meta-migration.
-    metaMigrate :: ToField a => Int32 -> [(Query, [a])] -> IO ()
+    metaMigrate :: ToRow a => Int32 -> [(Query, a)] -> IO ()
     metaMigrate metaVersion sqls = do
       -- Get the meta-version; defaults to 0 if we've only just
       -- created the metadata table.
-      Only currentMetaVersion <- fromMaybe (Only 0) <$> fmap listToMaybe (query sqlGetMetaVersion [metaTable])
+      Only currentMetaVersion <- fromMaybe (Only 0) <$>
+                                   fmap listToMaybe (query sqlGetMetaVersion $ Only metaTable)
       -- If the migration is applicable, then we apply it.
       when (currentMetaVersion + 1 == metaVersion) $ do
         forM_ sqls $ \(q, ps) -> execute q ps
-        rowCount <- execute sqlUpdateMetaVersion [ toField metaTable
-                                                 , toField metaVersion
-                                                 , toField currentMetaVersion
-                                                 ]
+        rowCount <- execute sqlUpdateMetaVersion ( metaTable
+                                                 , metaVersion
+                                                 , currentMetaVersion
+                                                 )
         when (rowCount /= 1) $ error $ "Unexpected row count " ++ show rowCount ++ " from update on \"migration_meta\" table!"
 
     -- Shorthand:
     transact = withTransactionLevel ReadCommitted c
 
-    execute :: ToField a => Query -> [a] -> IO Int64
+    execute :: ToRow a => Query -> a -> IO Int64
     execute = P.execute c
 
     execute_ :: Query -> IO Int64
     execute_ = P.execute_ c
 
-    query :: (ToField a, FromRow r) => Query -> [a] -> IO [r]
+    query :: (ToRow a, FromRow r) => Query -> a -> IO [r]
     query = P.query c
 
     -- Perform a transaction with the exclusive lock held. The lock is
