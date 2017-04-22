@@ -39,8 +39,8 @@ data MigrationError =
 instance Exception MigrationError
 
 -- | Context for migrations.
-data MigrationContext = MigrationContext { mcMetaMigrationTable :: Table
-                                         , mcMigrationTable :: Table
+data MigrationContext = MigrationContext { mcMetaMigrationTable :: QualifiedIdentifier
+                                         , mcMigrationTable :: QualifiedIdentifier
                                          }
 
 -- | Parameter wrapper for a query. Used in when there are several
@@ -85,8 +85,8 @@ migrate :: ToRow p => Connection -> Schema -> [(Text, Query, p)] -> IO ()
 migrate connection schema =
     migrate' tables connection schema
   where
-    tables = MigrationContext { mcMetaMigrationTable = Table schema "__peregrin_migration_meta__"
-                              , mcMigrationTable = Table schema "__peregrin_migration__"
+    tables = MigrationContext { mcMetaMigrationTable = QualifiedIdentifier schema "__peregrin_migration_meta__"
+                              , mcMigrationTable = QualifiedIdentifier schema "__peregrin_migration__"
                               }
 
 migrate' :: ToRow p => MigrationContext -> Connection -> Schema -> [(Text, Query, p)] -> IO ()

@@ -3,8 +3,6 @@ module Database.Peregrin.Metadata
     ( Identifier(..)
     , QualifiedIdentifier(..)
     , Schema(..)
-    , Table(..)
-    , Typ(..)
     ) where
 
 import           Data.Text (Text)
@@ -36,15 +34,3 @@ instance ToField Schema where
 schemaToText :: Schema -> Text
 schemaToText DefaultSchema = "public"
 schemaToText (NamedSchema schemaId) = schemaId
-
--- | Table name, including which schema it is in.
-data Table = Table Schema Text
-
-instance ToField Table where
-  toField (Table schema name) = toField $ QualifiedIdentifier schema name
-
--- | Type name, including which schema it is in.
-data Typ = Typ Schema Text
-
-instance ToField Typ where
-  toField (Typ schema name) = toField $ QualifiedIdentifier schema name
