@@ -1,5 +1,5 @@
 Name:                peregrin
-Version:             0.1.0
+Version:             0.1.1
 Synopsis:            Database migration support for use in other libraries.
 Description:         Database migration support for use in other libraries.
                      Currently only supports PostgreSQL.
