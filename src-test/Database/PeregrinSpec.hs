@@ -66,7 +66,7 @@ mkMigrateSpec mkConnectionPool =
 
       it "can apply parameterized migrations" $ do
         -- Setup
-        let table = Only $ QualifiedIdentifier schema "X"
+        let table = Only $ QIdentifier schema "X"
         -- Exercise
         migrate' schema [ (cid0, createTableSql, table)
                         ]
@@ -75,8 +75,8 @@ mkMigrateSpec mkConnectionPool =
 
       it "can apply identical parameterized migrations with different parameters" $ do
         -- Setup:
-        let tableX = QualifiedIdentifier schema "X"
-        let tableY = QualifiedIdentifier schema "Y"
+        let tableX = QIdentifier schema "X"
+        let tableY = QIdentifier schema "Y"
         -- Exercise:
         migrate' schema [ (cid0, createTableSql, Only tableX)
                         , (cid1, createTableSql, Only tableY)
@@ -86,8 +86,8 @@ mkMigrateSpec mkConnectionPool =
 
       it "can apply parameterized migrations with different parameter 'shapes'" $ do
         -- Setup:
-        let tableX = QualifiedIdentifier schema "X"
-        let tableY = QualifiedIdentifier schema "Y"
+        let tableX = QIdentifier schema "X"
+        let tableY = QIdentifier schema "Y"
         -- Exercise:
         migrate' schema [ (cid0, "CREATE TABLE ? (X INT)", QP $ Only $ tableX)
                         , (cid1, "CREATE TABLE ? (? INT)", QP $ (tableY, Identifier "Y"))

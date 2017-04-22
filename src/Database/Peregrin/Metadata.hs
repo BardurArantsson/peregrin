@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Database.Peregrin.Metadata
     ( Identifier(..)
-    , QualifiedIdentifier(..)
+    , QIdentifier(..)
     , Schema(..)
     ) where
 
@@ -18,10 +18,10 @@ instance ToField Identifier where
 
 -- | A /qualified/ identifier of an object in the database, i.e.
 -- an identifier with an attached schema.
-data QualifiedIdentifier = QualifiedIdentifier Schema Text
+data QIdentifier = QIdentifier Schema Text
 
-instance ToField QualifiedIdentifier where
-  toField (QualifiedIdentifier schema i) = toField $ PST.QualifiedIdentifier (Just $ schemaToText schema) i
+instance ToField QIdentifier where
+  toField (QIdentifier schema i) = toField $ PST.QualifiedIdentifier (Just $ schemaToText schema) i
 
 -- | A schema designation.
 data Schema = DefaultSchema
