@@ -4,11 +4,9 @@ module Database.Peregrin.Metadata
     , QualifiedIdentifier(..)
     , Schema(..)
     , Table(..)
-    , ToSQL(..)
     , Typ(..)
     ) where
 
-import qualified Data.Text as T
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple.ToField (ToField(..))
 import qualified Database.PostgreSQL.Simple.Types as PST
@@ -39,9 +37,6 @@ schemaToText :: Schema -> Text
 schemaToText DefaultSchema = "public"
 schemaToText (NamedSchema schemaId) = schemaId
 
-schemaToIdentifier :: Schema -> Identifier
-schemaToIdentifier s = Identifier $ schemaToText s
-
 -- | Table name, including which schema it is in.
 data Table = Table Schema Text
 
@@ -53,32 +48,3 @@ data Typ = Typ Schema Text
 
 instance ToField Typ where
   toField (Typ schema name) = toField $ QualifiedIdentifier schema name
-
--- | Convert metadata object identifier to its quoted SQL
--- representation.
-class ToSQL a where
-    toSQL :: a -> Text
-
---
--- Instances
---
-
-instance ToSQL Schema where
-  toSQL = toSQL . schemaToIdentifier
-
-instance ToSQL Table where
-  toSQL (Table s ti) = toSQL $ QualifiedIdentifier s ti
-
-instance ToSQL Typ where
-  toSQL (Typ schema tableId) = toSQL $ QualifiedIdentifier schema tableId
-
-instance ToSQL Identifier where
-  toSQL (Identifier i) =
-    T.concat [ singleQt, T.replace singleQt doubleQt i , singleQt ]
-    where
-      singleQt = "\""
-      doubleQt = "\"\""
-
-instance ToSQL QualifiedIdentifier where
-  toSQL (QualifiedIdentifier s i) =
-    T.concat [toSQL s, ".", toSQL $ Identifier i]
