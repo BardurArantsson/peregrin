@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Database.Peregrin.Metadata
-    ( Schema(..)
+    ( Identifier(..)
+    , QualifiedIdentifier(..)
+    , Schema(..)
     , Table(..)
     , ToSQL(..)
     , Typ(..)
@@ -9,7 +11,21 @@ module Database.Peregrin.Metadata
 import qualified Data.Text as T
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple.ToField (ToField(..))
-import           Database.PostgreSQL.Simple.Types (Identifier(..), QualifiedIdentifier(..))
+import qualified Database.PostgreSQL.Simple.Types as PST
+
+-- | An /unqalified/ identifier of an object in the database, i.e.
+-- an identifier without an attached schema.
+data Identifier = Identifier Text
+
+instance ToField Identifier where
+  toField (Identifier i) = toField $ PST.Identifier i
+
+-- | A /qualified/ identifier of an object in the database, i.e.
+-- an identifier with an attached schema.
+data QualifiedIdentifier = QualifiedIdentifier Schema Text
+
+instance ToField QualifiedIdentifier where
+  toField (QualifiedIdentifier schema i) = toField $ PST.QualifiedIdentifier (Just $ schemaToText schema) i
 
 -- | A schema designation.
 data Schema = DefaultSchema
@@ -23,32 +39,20 @@ schemaToText :: Schema -> Text
 schemaToText DefaultSchema = "public"
 schemaToText (NamedSchema schemaId) = schemaId
 
--- | Create a qualified identifier.
-mkQualifiedIdentifier :: Schema -> Text -> QualifiedIdentifier
-mkQualifiedIdentifier schema = QualifiedIdentifier (Just $ schemaToText schema)
+schemaToIdentifier :: Schema -> Identifier
+schemaToIdentifier s = Identifier $ schemaToText s
 
 -- | Table name, including which schema it is in.
 data Table = Table Schema Text
 
 instance ToField Table where
-  toField (Table schema name) = toField $ mkQualifiedIdentifier schema name
+  toField (Table schema name) = toField $ QualifiedIdentifier schema name
 
 -- | Type name, including which schema it is in.
 data Typ = Typ Schema Text
 
 instance ToField Typ where
-  toField (Typ schema name) = toField $ mkQualifiedIdentifier schema name
-
--- | Quote a PostgreSQL object identifier. Useful in circumstances
--- where you need to quote a dynamically generated identifier.
-quoteToSQL :: Text -> Text
-quoteToSQL i = T.concat [ singleQt
-                        , T.replace singleQt doubleQt i
-                        , singleQt
-                        ]
-  where
-    singleQt = "\""
-    doubleQt = "\"\""
+  toField (Typ schema name) = toField $ QualifiedIdentifier schema name
 
 -- | Convert metadata object identifier to its quoted SQL
 -- representation.
@@ -60,13 +64,21 @@ class ToSQL a where
 --
 
 instance ToSQL Schema where
-  toSQL DefaultSchema = quoteToSQL "public"
-  toSQL (NamedSchema schemaId) = quoteToSQL schemaId
+  toSQL = toSQL . schemaToIdentifier
 
 instance ToSQL Table where
-  toSQL (Table schema tableId) =
-    T.concat [toSQL schema, ".", quoteToSQL tableId]
+  toSQL (Table s ti) = toSQL $ QualifiedIdentifier s ti
 
 instance ToSQL Typ where
-  toSQL (Typ schema tableId) =
-    T.concat [toSQL schema, ".", quoteToSQL tableId]
+  toSQL (Typ schema tableId) = toSQL $ QualifiedIdentifier schema tableId
+
+instance ToSQL Identifier where
+  toSQL (Identifier i) =
+    T.concat [ singleQt, T.replace singleQt doubleQt i , singleQt ]
+    where
+      singleQt = "\""
+      doubleQt = "\"\""
+
+instance ToSQL QualifiedIdentifier where
+  toSQL (QualifiedIdentifier s i) =
+    T.concat [toSQL s, ".", toSQL $ Identifier i]

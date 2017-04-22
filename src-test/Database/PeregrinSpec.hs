@@ -14,7 +14,6 @@ import           Database.Peregrin.Metadata
 import           Data.Pool (Pool, withResource, destroyAllResources)
 import           Data.Text (Text)
 import           Database.PostgreSQL.Simple (Connection, Query, Only(..), FromRow, ToRow)
-import           Database.PostgreSQL.Simple.Types (Identifier(..))
 import qualified Database.PostgreSQL.Simple as PS
 import           Test.Hspec (Spec, Selector, describe)
 import qualified Test.Hspec as Hspec
