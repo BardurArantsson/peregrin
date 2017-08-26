@@ -49,7 +49,14 @@ mkMigrateSpec mkConnectionPool =
         -- Verify:
         assertCanSelectFromX
 
-      it "throws an error if SQL is changed for a given change set ID" $ do
+      it "throws an error if SQL is changed for a given change set ID (single call)" $ do
+        -- Exercise:
+        migrate' schema [ (cid0, createXSql, ())
+                        , (cid0, createXSqlBad, ()) ]
+          -- Verify: Should throw here
+          `shouldThrow` (== MigrationModifiedError cid0)
+
+      it "throws an error if SQL is changed for a given change set ID (multiple calls)" $ do
         -- Exercise:
         migrate' schema [ (cid0, createXSql, ()) ]
         migrate' schema [ (cid0, createXSqlBad, ()) ]
