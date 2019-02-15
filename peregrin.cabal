@@ -1,3 +1,4 @@
+Cabal-version:       2.2
 Name:                peregrin
 Version:             0.2.0
 Synopsis:            Database migration support for use in other libraries.
@@ -6,7 +7,6 @@ Description:         Database migration support for use in other libraries.
 License:             MIT
 License-file:        LICENSE
 Category:            Database
-Cabal-version:       >=1.10
 Build-type:          Simple
 Author:              Bardur Arantsson
 Maintainer:          Bardur Arantsson <bardur@scientician.net>
