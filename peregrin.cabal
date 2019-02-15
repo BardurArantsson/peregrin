@@ -18,7 +18,7 @@ Source-Repository head
 Library
   build-depends:      base >= 4.9 && < 5
                     , bytestring >= 0.10 && < 0.11
-                    , postgresql-simple >= 0.5.2.1 && < 0.6
+                    , postgresql-simple >= 0.5.2.1 && < 0.7
                     , text >= 1.1.0 && < 2
   default-language:   Haskell2010
   ghc-options:        -Wall
@@ -31,8 +31,8 @@ Test-Suite tests
   hs-source-dirs:     src-test
   main-is:            Main.hs
   build-depends:      base == 4.*
-                    , pg-harness-client >= 0.4.0 && < 0.5.0
-                    , postgresql-simple >= 0.5.2.1 && < 0.6
+                    , pg-harness-client >= 0.6.0 && < 0.7.0
+                    , postgresql-simple >= 0.5.2.1 && < 0.7
                     , resource-pool >= 0.2.1 && < 0.3
                     , text >= 1.0 && < 2
                     , transformers >= 0.5.2 && < 0.6
