@@ -1,6 +1,6 @@
 Cabal-version:       2.2
 Name:                peregrin
-Version:             0.2.0
+Version:             0.3.0
 Synopsis:            Database migration support for use in other libraries.
 Description:         Database migration support for use in other libraries.
                      Currently only supports PostgreSQL.
