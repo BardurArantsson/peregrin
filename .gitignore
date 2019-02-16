@@ -5,3 +5,4 @@ dist-newstyle/
 cabal.sandbox.config
 .idea
 /.ghc.environment.*
+/.stack-work

@@ -1,0 +1,6 @@
+resolver: lts-13.7
+packages:
+- .
+extra-deps:
+  # Only exists in 'nightly' for now
+  - pg-harness-client-0.6.0
