@@ -3,16 +3,19 @@ module Main ( main ) where
 
 import           Control.Applicative ((<$>))
 import           Database.PeregrinSpec ( mkMigrateSpec )
+import           Data.Maybe (fromMaybe)
 import           Data.Pool (createPool)
 import qualified Database.PostgreSQL.Harness.Client as H
 import           Database.PostgreSQL.Simple (connectPostgreSQL, close)
+import           System.Environment (lookupEnv)
 import           Test.Hspec
 
 main :: IO ()
 main = do
-  -- HSpec has no easy way to get "other" command line parameters, so
-  -- we'll just settle for a hardcoded value here.
-  let url = "http://localhost:8900"
+  -- We require an environment variable to point to a tempgres server instance.
+  url <- fmap
+    (fromMaybe (error "Missing TEMPGRES_URL environment variable"))
+    (lookupEnv "TEMPGRES_URL")
   -- Connection pool creation function. We use a fresh temporary
   -- database for every connection pool.
   let mkConnectionPool = do
