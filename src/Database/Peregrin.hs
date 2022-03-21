@@ -7,7 +7,6 @@ module Database.Peregrin
     , QP(..)
     ) where
 
-import           Control.Applicative ((<$>))
 import           Control.Exception (Exception, throwIO)
 import           Control.Monad (forM_, when, void)
 import           Data.ByteString (ByteString)
