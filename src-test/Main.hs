@@ -4,7 +4,7 @@ module Main ( main ) where
 import           Control.Applicative ((<$>))
 import           Database.PeregrinSpec ( mkMigrateSpec )
 import           Data.Maybe (fromMaybe)
-import           Data.Pool (createPool)
+import           Data.Pool (newPool, defaultPoolConfig)
 import qualified Database.PostgreSQL.Harness.Client as H
 import           Database.PostgreSQL.Simple (connectPostgreSQL, close)
 import           System.Environment (lookupEnv)
@@ -20,6 +20,7 @@ main = do
   -- database for every connection pool.
   let mkConnectionPool = do
         connectionString <- H.toConnectionString <$> H.createTemporaryDatabase url
-        createPool (connectPostgreSQL connectionString) close 1 1 5
+        let poolConfig = defaultPoolConfig (connectPostgreSQL connectionString) close 1.0 5
+        newPool poolConfig
   -- Run
   hspec $ mkMigrateSpec mkConnectionPool

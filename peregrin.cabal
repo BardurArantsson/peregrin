@@ -33,8 +33,8 @@ Test-Suite tests
   build-depends:      base == 4.*
                     , pg-harness-client >= 0.6.0 && < 0.7.0
                     , postgresql-simple >= 0.5.2.1 && < 0.8
-                    , resource-pool >= 0.2.1 && < 0.4
-                    , text >= 1.0 && < 2
+                    , resource-pool >= 0.4 && < 0.5
+                    , text >= 1.0 && < 3
                     , transformers >= 0.5.2 && < 0.6
                     -- Self-dependency:
                     , peregrin

@@ -137,8 +137,8 @@ assertCanQuery q p = do
 query :: (ToRow p, FromRow a) => Query -> p -> ReaderT (Pool Connection) IO [a]
 query q p = do
   connectionPool <- ask
-  withResource connectionPool $ \connection ->
-    lift $ PS.query connection q p
+  lift $ withResource connectionPool $ \connection ->
+    PS.query connection q p
 
 shouldThrow :: Exception e => ReaderT (Pool Connection) IO a -> Selector e -> ReaderT (Pool Connection) IO ()
 shouldThrow action selector = do
